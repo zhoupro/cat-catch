@@ -5,3 +5,8 @@ dist/
 *.zip
 *.pem
 /.workbuddy/memory
+
+# Node.js 依赖（cat-catch-server 等 tools/* 子项目）
+node_modules/
+package-lock.json
+yarn.lock

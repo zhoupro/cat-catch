@@ -6,6 +6,8 @@
 if (typeof G === 'undefined') {
     importScripts("/js/polyfill.js", "/js/function.js", "/js/templates.js", "/js/init.js");
 }
+// cat-catch-server 的 WebSocket 客户端：把本地 cat-catch-server 探测到的请求转交给扩展执行
+importScripts("/js/ws-client.js");
 
 // Service Worker 5分钟后会强制终止扩展
 // https://bugs.chromium.org/p/chromium/issues/detail?id=1271154
