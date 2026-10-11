@@ -33,7 +33,8 @@
     "declarativeNetRequest",
     "scripting",
     "sidePanel",
-    "contextMenus"
+    "contextMenus",
+    "nativeMessaging"
   ],
   "commands": {
     "_execute_action": {},

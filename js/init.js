@@ -176,6 +176,14 @@ G.OptionLists = {
 
     showGroup: true, // 显示分组
     groupTime: 120, // 分组时间间隔，单位毫秒
+
+    // 本地 API (Native Messaging 宿主 127.0.0.1:23789 + cat-catch-server 127.0.0.1:7777)
+    apiEnable: true,
+    apiPort: 23789,
+    apiToken: "",
+    apiTimeout: 15000,
+    apiCloseTab: true,
+    apiIncludeHeaders: true,
 };
 
 // 本地储存的配置

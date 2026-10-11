@@ -117,6 +117,15 @@ class Bridge {
     }
 
     /**
+     * Broadcast a message to every connected client (e.g. reload).
+     */
+    broadcast(msg) {
+        for (const c of this.clients.values()) {
+            this._send(c, msg);
+        }
+    }
+
+    /**
      * Pick any live, registered client. Prefers the most recently seen one.
      */
     _pickClient() {

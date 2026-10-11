@@ -90,6 +90,11 @@ async function handleMessage(msg) {
         case "catch":
             catchTask(msg).catch((e) => console.error("[ws-client] catchTask error", e));
             return;
+        case "reload":
+            // 允许本机 cat-catch-server 远程触发扩展重载（改完扩展代码后
+            // 免去手动点 chrome://extensions 的刷新按钮）。
+            chrome.runtime.reload();
+            return;
     }
 }
 
@@ -208,18 +213,27 @@ function injectScript(tabId, file, allFrames, world) {
 
 /**
  * Read the media items that Cat-Catch's background.js has already classified
- * for this tab. We go through chrome.runtime.sendMessage rather than reading
- * `cacheData` directly so the response stays consistent with the SW restart
- * semantics.
+ * for this tab.
+ *
+ * ws-client.js runs inside the same service worker as background.js, and
+ * chrome.runtime.sendMessage() is never delivered back to the sender's own
+ * frame (onMessage fires in every extension frame *except* the sender's), so
+ * asking ourselves via runtime messaging would always resolve empty. Read the
+ * shared `cacheData` global (declared in init.js, same SW scope) directly;
+ * if the SW was just restarted and init.js hasn't restored it yet, fall back
+ * to the persisted storage.session copy.
  */
-function readMediaForTab(tabId) {
+async function readMediaForTab(tabId) {
+    try {
+        if (typeof cacheData !== "undefined" && Array.isArray(cacheData[tabId])) {
+            return cacheData[tabId];
+        }
+    } catch (e) { /* ignore, fall through to storage */ }
     return new Promise((resolve) => {
-        chrome.runtime.sendMessage({ Message: "getData", tabId }, (data) => {
-            if (chrome.runtime.lastError) {
-                console.warn("[ws-client] readMediaForTab error", tabId, chrome.runtime.lastError.message);
-                return resolve([]);
-            }
-            resolve(Array.isArray(data) ? data : []);
+        (chrome.storage.session ?? chrome.storage.local).get({ MediaData: {} }, (items) => {
+            if (chrome.runtime.lastError) { return resolve([]); }
+            const data = items?.MediaData ?? {};
+            resolve(Array.isArray(data[tabId]) ? data[tabId] : []);
         });
     });
 }
@@ -238,6 +252,9 @@ function normaliseItem(info) {
         webUrl: info.webUrl,
         title: info.title,
         getTime: info.getTime,
+        // 部分 CDN(抖音等)要求带 Referer/Cookie 才放行,透传给服务端。
+        requestHeaders: info.requestHeaders,
+        cookie: info.cookie,
     };
 }
 
@@ -303,7 +320,16 @@ async function catchTask(task) {
             list,
             pageTitle: tabInfo?.title || "",
         };
-        if (debug) resultMsg.debug = { tabCacheCount: raw.length, pageScanCount: pageScans.length, finalCount: list.length };
+        if (debug) resultMsg.debug = {
+            tabCacheCount: raw.length,
+            pageScanCount: pageScans.length,
+            finalCount: list.length,
+            enable: !!G.enable,
+            damn: !!G.damn,
+            initSync: !!G.initSyncComplete,
+            initLocal: !!G.initLocalComplete,
+            cacheKeys: Object.keys(cacheData).length,
+        };
         send(resultMsg);
     } catch (e) {
         send({ type: "catch.error", taskId, error: e.message || String(e) });

@@ -68,6 +68,21 @@ app.use((err, _req, res, _next) => {
     res.status(500).json({ ok: false, error: err.message || String(err) });
 });
 
+/**
+ * POST /api/reload
+ * Ask a connected extension to call chrome.runtime.reload() — handy after
+ * editing extension code, so you don't have to click the reload button on
+ * chrome://extensions. Local-only convenience for development.
+ */
+app.post("/api/reload", (_req, res) => {
+    const s = bridge.status();
+    if (!s.registered) {
+        return res.status(503).json({ ok: false, error: "没有可用的扩展连接" });
+    }
+    bridge.broadcast({ type: "reload" });
+    res.json({ ok: true, clients: s.registered });
+});
+
 const server = http.createServer(app);
 bridge.attach(server);
 

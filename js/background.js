@@ -9,6 +9,9 @@ if (typeof G === 'undefined') {
 // cat-catch-server 的 WebSocket 客户端：把本地 cat-catch-server 探测到的请求转交给扩展执行
 importScripts("/js/ws-client.js");
 
+// 本地 HTTP API：连接 Native Messaging 宿主, 宿主会拉起 cat-catch-server 并提供 127.0.0.1:23789
+if (typeof apiConnect === "undefined") { importScripts("/js/api.js"); }
+
 // Service Worker 5分钟后会强制终止扩展
 // https://bugs.chromium.org/p/chromium/issues/detail?id=1271154
 // https://stackoverflow.com/questions/66618136/persistent-service-worker-in-chrome-extension/70003493#70003493

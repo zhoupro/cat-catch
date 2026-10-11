@@ -34,7 +34,8 @@
     "alarms",
     "scripting",
     "declarativeNetRequest",
-    "contextMenus"
+    "contextMenus",
+    "nativeMessaging"
   ],
   "commands": {
     "_execute_browser_action": {},
